@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { FileText, LogOut, User } from "lucide-react";
+import { FileText, LogOut, User, Settings } from "lucide-react";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -17,7 +17,7 @@ export function Navbar() {
       <div className="flex items-center gap-4">
         {session?.user && (
           <>
-            <span className="flex items-center gap-2 text-sm text-gray-600">
+            <Link href="/settings" className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600">
               {session.user.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={session.user.image} alt="" className="w-6 h-6 rounded-full" />
@@ -25,7 +25,8 @@ export function Navbar() {
                 <User className="w-4 h-4" />
               )}
               {session.user.name ?? session.user.email}
-            </span>
+              <Settings className="w-3.5 h-3.5 text-gray-400" />
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-600"

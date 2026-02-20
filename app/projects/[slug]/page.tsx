@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings, Download } from "lucide-react";
 import { AdrListClient } from "./AdrListClient";
 
 export default async function ProjectPage({
@@ -47,6 +47,14 @@ export default async function ProjectPage({
           )}
         </div>
         <div className="flex items-center gap-3">
+          <a
+            href={`/api/projects/${project.slug}/export`}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            title="Export all ADRs as ZIP"
+          >
+            <Download className="w-4 h-4" />
+            Export all
+          </a>
           <Link
             href={`/projects/${project.slug}/settings`}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"

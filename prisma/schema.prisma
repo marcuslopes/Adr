@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth (NextAuth) ─────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  adrs          Adr[]
+  memberships   ProjectMember[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── App Models ──────────────────────────────────────────────────────────────
+
+model Project {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  backend       Backend  @default(DATABASE)
+  filePath      String?
+  gitAutoCommit Boolean  @default(false)
+  gitBranch     String   @default("main")
+  gitToken      String?
+  slackWebhook  String?
+  notifyEmail   String?
+  adrs          Adr[]
+  members       ProjectMember[]
+  nextNumber    Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  role      MemberRole  @default(MEMBER)
+  createdAt DateTime    @default(now())
+
+  @@unique([projectId, userId])
+}
+
+model Adr {
+  id           String    @id @default(cuid())
+  number       Int
+  slug         String
+  title        String
+  status       AdrStatus @default(PROPOSED)
+  context      String    @db.Text
+  decision     String    @db.Text
+  consequences String    @db.Text
+  author       User      @relation(fields: [authorId], references: [id])
+  authorId     String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    String
+  // Self-referential: supersedes
+  supersedes   Adr[]     @relation("Supersedes")
+  supersededBy Adr[]     @relation("Supersedes")
+  // Self-referential: related
+  relatedTo    Adr[]     @relation("Related")
+  relatedFrom  Adr[]     @relation("Related")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([projectId, number])
+  @@unique([projectId, slug])
+}
+
+enum AdrStatus {
+  PROPOSED
+  ACCEPTED
+  DEPRECATED
+  SUPERSEDED
+}
+
+enum Backend {
+  DATABASE
+  FILE
+}
+
+enum MemberRole {
+  OWNER
+  MEMBER
+}
